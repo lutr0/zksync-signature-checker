@@ -80,17 +80,7 @@ contract Paymaster is IPaymaster, Ownable {
             console.log("gasLimit", _transaction.gasLimit);
 
             //Validate that the message was signed by Ondefy backend
-            require(
-                isValidSignature(
-                    data,
-                    address(uint160(_transaction.from)), //conver user address
-                    token,
-                    amount,
-                    _transaction.maxFeePerGas,
-                    _transaction.gasLimit
-                ),
-                "Invalid signature"
-            );
+            require(isValidSignature(data, token), "Invalid signature");
 
             // console.log("tx.origin", tx.origin);
             // console.logBytes(signedMessage);
@@ -164,20 +154,13 @@ contract Paymaster is IPaymaster, Ownable {
 
     function isValidSignature(
         bytes memory _signature,
-        address _from,
-        address _token,
-        uint256 _amount,
-        uint256 _maxFeePerGas,
-        uint256 _gasLimit
+        address _token
     ) public returns (bool) {
         //TODO add view
         // (bytes memory signedMessage, uint256 test) = abi.decode(_signature, (bytes, uint256));
         // require(keccak256(signedMessage) == keccak256(_signature), "Different!");
 
-        bytes32 messageHash = keccak256(
-            // abi.encodePacked(_from,_token, _amount, _maxFeePerGas, _gasLimit)
-            abi.encodePacked(_token)
-        );
+        bytes32 messageHash = keccak256(abi.encodePacked(_token));
 
         messageHashPublic = messageHash;
 
@@ -189,21 +172,6 @@ contract Paymaster is IPaymaster, Ownable {
         // Note: this returns false, even when passing the same parameters as off-chain
         return true;
         return verifier.isValidSignatureNow(messageHash, _signature);
-    }
-
-    //TODO TEST ONLY
-    function bytes32ToString(
-        bytes32 _bytes32
-    ) public pure returns (string memory) {
-        uint8 i = 0;
-        while (i < 32 && _bytes32[i] != 0) {
-            i++;
-        }
-        bytes memory bytesArray = new bytes(i);
-        for (i = 0; i < 32 && _bytes32[i] != 0; i++) {
-            bytesArray[i] = _bytes32[i];
-        }
-        return string(bytesArray);
     }
 
     receive() external payable {}
