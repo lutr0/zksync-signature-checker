@@ -152,23 +152,15 @@ contract Paymaster is IPaymaster, Ownable {
         require(success, "Failed to withdraw funds from paymaster.");
     }
 
-    function isValidSignature(
-        bytes memory _signature,
-        address _token
-    ) public returns (bool) {
-        //TODO add view
-        // (bytes memory signedMessage, uint256 test) = abi.decode(_signature, (bytes, uint256));
-        // require(keccak256(signedMessage) == keccak256(_signature), "Different!");
-
+    function isValidSignature(bytes memory _signature, address _token) public view returns (bool) {
         bytes32 messageHash = keccak256(abi.encodePacked(_token));
+        bytes32 ethSignedMessageHash = ECDSA.toEthSignedMessageHash(messageHash);
 
-        messageHashPublic = messageHash;
-
-        console.log("Signer:", verifier == messageHash.recover(_signature));
-
-        // Note: this returns false, even when passing the same parameters as off-chain
-        return true;
-        return verifier == messageHash.recover(_signature);
+        (address recoveredAddress, ECDSA.RecoverError error2) = ECDSA.tryRecover(ethSignedMessageHash, _signature);
+        if (error2 != ECDSA.RecoverError.NoError) {
+            return false;
+        }
+        return recoveredAddress == verifier;
     }
 
     receive() external payable {}

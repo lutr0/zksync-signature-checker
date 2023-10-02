@@ -64,7 +64,7 @@ describe("ERC20Paymaster", function () {
 
     const messageHash = await getMessageHash(token);
 
-    const SignedMessageHash = await verifier.signMessage(messageHash);
+    const SignedMessageHash = await verifier.signMessage(ethers.utils.arrayify(messageHash));
     console.log("Message hash: ", messageHash.toString());
     console.log("Signed message hash: ", SignedMessageHash.toString());
     console.log("User address: ", user.address.toString());
@@ -78,11 +78,6 @@ describe("ERC20Paymaster", function () {
     //   [ "bytes","address", "uint256"],
     //   [SignedMessageHash, user.address, expiration]
     // );
-    const innerInput = ethers.utils.solidityPack(
-      ["bytes"],
-      [SignedMessageHash]
-    );
-    console.log("Inner input: ", innerInput);
 
     const paymasterParams = utils.getPaymasterParams(
       paymaster.address.toString(),
@@ -90,7 +85,7 @@ describe("ERC20Paymaster", function () {
         type: payType,
         token: token,
         minimalAllowance,
-        innerInput: SignedMessageHash,
+        innerInput: ethers.utils.arrayify(SignedMessageHash),
       }
     );
 
