@@ -6,14 +6,14 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IPaymaster, ExecutionResult, PAYMASTER_VALIDATION_SUCCESS_MAGIC} from "@matterlabs/zksync-contracts/l2/system-contracts/interfaces/IPaymaster.sol";
 import {IPaymasterFlow} from "@matterlabs/zksync-contracts/l2/system-contracts/interfaces/IPaymasterFlow.sol";
 import {TransactionHelper, Transaction} from "@matterlabs/zksync-contracts/l2/system-contracts/libraries/TransactionHelper.sol";
-import {SignatureChecker} from "@matterlabs/signature-checker/contracts/SignatureChecker.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "@matterlabs/zksync-contracts/l2/system-contracts/Constants.sol";
 import "hardhat/console.sol";
 
 contract Paymaster is IPaymaster, Ownable {
-    using SignatureChecker for address;
+    using ECDSA for bytes32;
 
     address public verifier;
     bytes public signedMessagePublic;
@@ -164,14 +164,11 @@ contract Paymaster is IPaymaster, Ownable {
 
         messageHashPublic = messageHash;
 
-        console.log(
-            "Correct signature:",
-            verifier.isValidSignatureNow(messageHash, _signature)
-        );
+        console.log("Signer:", verifier == messageHash.recover(_signature));
 
         // Note: this returns false, even when passing the same parameters as off-chain
         return true;
-        return verifier.isValidSignatureNow(messageHash, _signature);
+        return verifier == messageHash.recover(_signature);
     }
 
     receive() external payable {}
